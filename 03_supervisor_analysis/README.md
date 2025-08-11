@@ -5,7 +5,7 @@
 ## 🚀 **Usage**
 
 ```bash
-python 03_supervisor_analysis/step3_main.py "Professor Name" "University" "URL" "path/to/resume.pdf" "path/to/position.pdf"
+python 03_supervisor_analysis/step3_main.py "Professor Name" "University" "Publication URL" "path/to/position.pdf"
 ```
 
 ## 📁 **Pipeline Components**
@@ -23,9 +23,7 @@ python 03_supervisor_analysis/step3_main.py "Professor Name" "University" "URL" 
 ## 📋 **Requirements**
 
 ### Input Data
-The script requires paths to the following two PDF files as command-line arguments:
-- Your resume/CV
-- The official PhD position description
+The script requires the path to the official PhD position description PDF as a command-line argument.
 
 ### Environment
 - **Conda Environment**: `gen_ai`
