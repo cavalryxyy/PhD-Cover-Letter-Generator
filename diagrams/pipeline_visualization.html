@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PhD Cover Letter Generator - Pipeline Visualization</title>
+    <script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #333;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .flowchart {
+            margin: 20px 0;
+            padding: 20px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            background: #fafafa;
+        }
+        .flowchart h2 {
+            color: #666;
+            margin-bottom: 15px;
+        }
+        .mermaid {
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>PhD Cover Letter Generator - Pipeline Visualization</h1>
+        
+        <div class="flowchart">
+            <h2>Step 2: Candidate Resume Processing</h2>
+            <div class="mermaid">
+graph TD
+    %% ========================
+    %% Color Scheme
+    %% ========================
+    classDef userInput fill:#89CFF0,stroke:#1E90FF,color:#333,stroke-width:2px
+    classDef script fill:#B19CD9,stroke:#9370DB,color:#333,stroke-width:2px
+    classDef process fill:#98FB98,stroke:#3CB371,color:#333,stroke-width:2px
+    classDef data fill:#FFA07A,stroke:#FF7F50,color:#333,stroke-width:2px
+    classDef output fill:#FFD700,stroke:#FFA500,color:#333,stroke-width:2px
+
+    %% ========================
+    %% Component Grouping
+    %% ========================
+    subgraph "User Input"
+        A["CLI Argument <br/>(Path to resume.pdf)"]
+    end
+    
+    subgraph "Execution Script (step2_main.py)"
+        B[main] --> C{setup_components};
+        C -- "embeddings client" --> B;
+        B --> D[processor.process_and_save];
+    end
+    
+    subgraph "Processing Logic (step2_candidate_processor.py)"
+        E[CandidateProcessor]
+        D -- "resume.pdf" --> E;
+        E -- "Text Chunks" --> F((FAISS Vector Store));
+    end
+    
+    subgraph "Data Source (src/AzureConnection.py)"
+        G[embeddings]
+        F -- "Uses" --> G
+    end
+    
+    subgraph "Persistent Output"
+        H["vector_stores/ <br/> candidate_vector_store.faiss"]
+        F -- "Saves to Disk" --> H
+    end
+
+    %% ========================
+    %% Apply Color Coding
+    %% ========================
+    class A userInput;
+    class B,C,D script;
+    class E,F process;
+    class G data;
+    class H output;
+            </div>
+        </div>
+
+        <div class="flowchart">
+            <h2>Step 3: Supervisor Research Analysis</h2>
+            <div class="mermaid">
+graph TD
+    %% ========================
+    %% Color Scheme
+    %% ========================
+    classDef userInput fill:#89CFF0,stroke:#1E90FF,color:#333,stroke-width:2px
+    classDef script fill:#B19CD9,stroke:#9370DB,color:#333,stroke-width:2px
+    classDef process fill:#98FB98,stroke:#3CB371,color:#333,stroke-width:2px
+    classDef data fill:#FFA07A,stroke:#FF7F50,color:#333,stroke-width:2px
+    classDef output fill:#FFD700,stroke:#FFA500,color:#333,stroke-width:2px
+    classDef llm fill:#DDA0DD,stroke:#BA55D3,color:#333,stroke-width:2px
+
+    %% ========================
+    %% Component Grouping
+    %% ========================
+    subgraph "User Input"
+        A["CLI Arguments <br/>(Professor, University, URL, Position Path)"]
+    end
+
+    subgraph "Execution Script (step3_main.py)"
+        B[main] --> C{validate_inputs};
+        C --> D{setup_components};
+        D --> E[execute_analysis];
+        E --> F[process_and_load];
+        E --> G[analyze];
+        G --> H[save_results];
+    end
+
+    subgraph "Data Processing (step3_document_processor.py)"
+        I[DocumentProcessor]
+        F -- "position.pdf" --> I;
+        I --> K((Institutional Store));
+    end
+
+    subgraph "Orchestration & Logic (step3_orchestrator.py)"
+        L[SupervisorAnalyzer] -- Inherits --> BA[base_analyzer.BaseAnalyzer]
+        M[WebSearcher]
+        G --> M;
+        M -- "Research Domains" --> L;
+        L -- "Queries" --> K;
+        K -- "RAG Context" --> L;
+        L --> N{_synthesize};
+    end
+    
+    subgraph "Prompt Engineering (step3_prompts.py)"
+        O[SUPERVISOR_SYNTHESIS_PROMPT]
+        N -- "Formats" --> O;
+        O -- "Formatted" --> N;
+    end
+
+    subgraph "Language Model Call"
+      P[Azure OpenAI]
+      N --> BA;
+      BA -- "API Request" --> P
+      P -- "Response" --> BA
+    end
+
+    subgraph "Persistent Output"
+      Q[Detailed Analysis File]
+      H --> Q
+    end
+    
+    %% ========================
+    %% Apply Color Coding
+    %% ========================
+    class A userInput;
+    class B,C,D,E,F,G,H script;
+    class I,K,M process;
+    class L,N,O,BA process;
+    class P llm;
+    class Q output;
+            </div>
+        </div>
+    </div>
+
+    <script>
+        mermaid.initialize({ 
+            startOnLoad: true,
+            theme: 'default',
+            flowchart: {
+                useMaxWidth: true,
+                htmlLabels: true
+            }
+        });
+    </script>
+</body>
+</html>
