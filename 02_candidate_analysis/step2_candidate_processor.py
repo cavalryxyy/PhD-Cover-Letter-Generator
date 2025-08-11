@@ -22,12 +22,17 @@ class CandidateProcessor:
         self.encoding = tiktoken.get_encoding("cl100k_base")
         self.vector_store_path = "vector_stores"
 
-    def process_and_save(self, resume_path: str):
+    def _count_tokens(self, text: str) -> int:
+        """Counts the number of tokens in a string."""
+        return len(self.encoding.encode(text))
+
+    def process_and_save(self, resume_path: str, token_tracker):
         """
         Processes the resume PDF, creates a vector store, and saves it to disk.
 
         Args:
             resume_path (str): The file path to the candidate's resume.
+            token_tracker: An instance of TokenUsageTracker.
         """
         if not os.path.exists(resume_path):
             logger.error(f"Resume file not found at: {resume_path}")
@@ -44,6 +49,10 @@ class CandidateProcessor:
                 return
 
             logger.info(f"Extracted {len(chunks)} chunks from the resume.")
+
+            # Track embedding tokens
+            for chunk in chunks:
+                token_tracker.add_embedding_tokens(self._count_tokens(chunk))
 
             # Create and save the vector store
             vector_store = FAISS.from_texts(texts=chunks, embedding=self.embedding_client)

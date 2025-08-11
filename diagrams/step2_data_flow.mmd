@@ -1,0 +1,28 @@
+graph TD
+    subgraph User Input
+        A["CLI Argument <br/>(Path to resume.pdf)"]
+    end
+
+    subgraph "step2_main.py"
+        B[main] --> C{setup_components};
+        C -- "embeddings client" --> B;
+        B --> D[processor.process_and_save];
+    end
+
+    subgraph "step2_candidate_processor.py"
+        E[CandidateProcessor]
+        D -- "resume.pdf" --> E;
+        E -- "Text Chunks" --> F((FAISS Vector Store));
+    end
+    
+    subgraph "src/AzureConnection.py"
+        G[embeddings]
+        F -- "Uses" --> G
+    end
+
+    subgraph "Output"
+      H["vector_stores/ <br/> candidate_vector_store.faiss"]
+      F -- "Saves to Disk" --> H
+    end
+
+    style H fill:#cde4f9,stroke:#99b9e8,stroke-width:2px

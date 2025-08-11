@@ -1,8 +1,15 @@
-# ?? Project Diagrams
+# ? Project Diagrams
 
 This folder contains visual diagrams and workflows for the PhD Cover Letter Generator project.
 
-## ?? **Available Diagrams**
+## ? **Available Diagrams**
+
+### **Step 2: Candidate Resume Processing**
+
+#### `step2_data_flow.mmd`
+- **Purpose**: Visualizes the data flow for the candidate resume processing step.
+- **Shows**: How the resume PDF is ingested, processed, and saved as a persistent vector store.
+- **Best for**: Understanding the data preparation stage for the candidate.
 
 ### **Step 3: Supervisor Analysis**
 
