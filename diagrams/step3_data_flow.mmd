@@ -1,6 +1,6 @@
 graph TD
     subgraph User Input
-        A["CLI Arguments <br/>(Professor, University, URL, Resume, Position)"]
+        A["CLI Arguments <br/>(Professor, University, URL, Position Path)"]
     end
 
     subgraph "step3_main.py"
@@ -14,9 +14,7 @@ graph TD
 
     subgraph "step3_document_processor.py"
         I[DocumentProcessor]
-        F -- "resume.pdf" --> I;
         F -- "position.pdf" --> I;
-        I --> J((Candidate Store));
         I --> K((Institutional Store));
     end
 
