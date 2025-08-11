@@ -52,7 +52,7 @@ venv.bak/
 *.npz
 * pdf
 /data
-*.txt
+step3_*.txt
 
 # Model files
 *.pth
