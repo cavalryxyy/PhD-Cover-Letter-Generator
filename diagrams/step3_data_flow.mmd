@@ -1,0 +1,49 @@
+graph TD
+    subgraph User Input
+        A["CLI Arguments <br/>(Professor, University, URL, Resume, Position)"]
+    end
+
+    subgraph "step3_main.py"
+        B[main] --> C{validate_inputs};
+        C --> D{setup_components};
+        D --> E[execute_analysis];
+        E --> F[process_and_load];
+        E --> G[analyze];
+        G --> H[save_results];
+    end
+
+    subgraph "step3_document_processor.py"
+        I[DocumentProcessor]
+        F -- "resume.pdf" --> I;
+        F -- "position.pdf" --> I;
+        I --> J((Candidate Store));
+        I --> K((Institutional Store));
+    end
+
+    subgraph "step3_orchestrator.py"
+        L[SupervisorAnalyzer] -- Inherits --> BA[base_analyzer.BaseAnalyzer]
+        M[WebSearcher]
+        G --> M;
+        M -- "Research Domains" --> L;
+        L -- "Queries" --> K;
+        K -- "RAG Context" --> L;
+        L --> N{_synthesize};
+    end
+    
+    subgraph "step3_prompts.py"
+        O[SUPERVISOR_SYNTHESIS_PROMPT]
+        N -- "Formats" --> O;
+        O -- "Formatted" --> N;
+    end
+
+    subgraph "LLM Call"
+      P[Azure OpenAI]
+      N --> BA;
+      BA -- "API Request" --> P
+      P -- "Response" --> BA
+    end
+
+    subgraph "Output"
+      Q[Detailed Analysis File]
+      H --> Q
+    end
