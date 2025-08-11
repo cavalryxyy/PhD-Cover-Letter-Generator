@@ -19,9 +19,10 @@ def setup_components():
         sys.path.insert(0, project_root)
         
         from src.AzureConnection import embeddings
+        from src.token_tracker import TokenUsageTracker
         from step2_candidate_processor import CandidateProcessor
         logger.info("Step 2 components loaded successfully.")
-        return embeddings, CandidateProcessor
+        return embeddings, CandidateProcessor, TokenUsageTracker
     except ImportError as e:
         logger.error(f"Failed to import Step 2 components: {e}")
         sys.exit(1)
@@ -41,15 +42,19 @@ def main():
     print(f"Resume Path: {resume_path}")
     print("-" * 50)
 
-    embeddings, CandidateProcessor = setup_components()
+    embeddings, CandidateProcessor, TokenUsageTracker = setup_components()
     
+    token_tracker = TokenUsageTracker()
     processor = CandidateProcessor(embedding_client=embeddings)
-    processor.process_and_save(resume_path)
+    processor.process_and_save(resume_path, token_tracker)
 
     print("\n" + "=" * 50)
     print("CANDIDATE ANALYSIS COMPLETE")
     print("=" * 50)
     print("Vector store for the candidate has been created and saved.")
+    
+    token_tracker.display_usage()
+    
     print("\nReady for Step 3 (Supervisor Analysis)")
 
 if __name__ == "__main__":
