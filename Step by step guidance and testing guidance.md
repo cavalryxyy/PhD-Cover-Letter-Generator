@@ -1,114 +1,89 @@
-# **README: Detailed Workflow for PhD Cover Letter Generator - LLM part**
+# **README: Detailed Workflow for PhD Cover Letter Generator**
 
-## **1\. Overview**
+## **1. Overview**
 
 This document provides a granular, step-by-step technical guide for the AI-Powered Cover Letter Generator.
 
-## **2\. Detailed Architecture & Workflow**
+## **2. Detailed Architecture & Workflow**
 
-The workflow is a multi-stage pipeline that combines data processing, retrieval, and generation. Each step builds upon the last to create a final product that is accurate, personalized, and compelling.
+The workflow is a multi-stage pipeline that combines data processing, retrieval-augmented generation (RAG), and language model synthesis. Each step is designed to be a modular component that processes specific inputs and produces outputs for the next stage.
 
 ### **High-Level Architecture Flow**
 
-\[Step 0: Initial Input\]  
-     |  
-     V  
-\[Step 1: PDF Processing & Vectorization\] \-\> (Data Processing)  
-     |  
-     V  
-\[Step 2: Candidate Data Ingestion\] \-\> (Data Processing)  
-     |  
-     V  
-\[Step 3: Supervisor Research Analysis\] \-\> (Agentic Call: RAG \+ Web Search)  
-     |  
-     V  
-\[Step 4: Professional Summary Generation\] \-\> (LLM Prompt)  
-     |  
-     V  
-\[Step 5: Cover Letter Generation\] \-\> (LLM Prompt with RAG)  
-     |  
-     V  
-\[Step 6: Iterative Refinement\] \-\> (LLM Prompt)  
-     |  
-     V  
-\[Final Output: Cover Letter\]
+[Step 1: Gather Inputs]
+     |
+     V
+[Step 2: Candidate Resume Processing] --> (Creates & Saves Candidate Vector Store)
+     |
+     V
+[Step 3: Supervisor Research Analysis] --> (Uses Position PDF for RAG)
+     |
+     V
+[Step 4: Professional Summary Generation] --> (Future)
+     |
+     V
+[Step 5: Cover Letter Generation] --> (Future - Uses Candidate Vector Store)
+     |
+     V
+[Final Output: Cover Letter]
 
-## **3\. Step-by-Step Implementation Guide**
+## **3. Step-by-Step Implementation Guide**
 
-### **Step 0: Initial Input**
+### **Step 1: Gather Inputs**
 
-* **Type:** Manual Data Collection  
-* **Goal:** Gather all necessary source materials.  
-* **Action:** The user provides the required files.  
-* **Input:**  
-  1. resume.json: The candidate's personal resume in a structured JSON format.  
-  2. university\_profile.pdf: Document describing the university and department.  
-  3. supervisor\_profile.pdf: Document with the professor's details and research interests.  
-  4. program\_directions.pdf: Document outlining the PhD program's focus areas.  
-* **Output:** Raw files ready for processing.
+*   **Status:** Prerequisite
+*   **Type:** Manual Data Collection
+*   **Goal:** Gather all necessary source materials for the pipeline.
+*   **Action:** The user must provide two key PDF documents in the `data/` directory.
+*   **Input:**
+    1.  `data/candidate/resume.pdf`: The candidate's personal resume.
+    2.  `data/institutional/position.pdf`: The official description of the PhD position.
+*   **Output:** Raw files ready for processing.
 
-### **Step 1: PDF Processing & Vectorization**
+### **Step 2: Candidate Resume Processing**
 
-* **Type:** Data Processing / Data Ingestion  
-* **Goal:** To make the content of the PDF documents searchable and accessible for the RAG system.  
-* **Action:**  
-  1. Use a library (e.g., PyMuPDF) to extract raw text from the three PDF files.  
-  2. Perform basic data cleaning on the extracted text (e.g., remove strange characters, fix broken line breaks).  
-  3. Chunk the cleaned text into smaller, semantically coherent segments (e.g., 500 tokens per chunk with some overlap).  
-  4. Use a text-embedding model to convert each text chunk into a numerical vector.  
-  5. Store these vectors, along with their source document metadata, in a Vector Database (e.g., FAISS, ChromaDB).  
-* **Input:** university\_profile.pdf, supervisor\_profile.pdf, program\_directions.pdf.  
-* **Output:** A populated and indexed Vector Database.
-
-### **Step 2: Candidate Data Ingestion**
-
-* **Type:** Data Processing  
-* **Goal:** To parse and prepare the candidate's personal data for use in prompts.  
-* **Action:** Load the resume.json file into a structured object or dictionary that can be easily serialized into a string for the LLM prompt.  
-* **Input:** resume.json.  
-* **Output:** A clean, string-formatted version of the candidate's resume (candidate\_profile\_string).
+*   **Status:** ? **Implemented**
+*   **Type:** Data Processing / Vector Store Creation
+*   **Goal:** To process the candidate's resume and create a persistent, searchable knowledge base for later use.
+*   **Action:**
+    1.  The `02_candidate_analysis/step2_main.py` script is executed.
+    2.  It reads the `resume.pdf` provided by the user.
+    3.  The text is extracted, cleaned, and split into semantically coherent chunks.
+    4.  Each chunk is converted into a numerical vector using an embedding model.
+    5.  The vectors are stored in a FAISS index.
+    6.  The completed FAISS index is saved to disk at `vector_stores/candidate_vector_store.faiss`.
+*   **Input:** `resume.pdf` file path.
+*   **Output:** A persistent FAISS vector store representing the candidate's profile.
 
 ### **Step 3: Supervisor Research Analysis**
 
-* **Type:** Agentic Call (RAG \+ Web Search)  
-* **Goal:** To gather the most current and comprehensive information on the supervisor's research, overcoming the limitations of potentially stale PDFs.  
-* **Action:**  
-  1. The system triggers an agent with the high-level query: "Find the latest and most significant academic achievements of Professor \[Name\] from \[University\]."  
-  2. The agent first uses its **RAG tool** to perform a similarity search on the Vector Database (from Step 1\) to find relevant info in the provided PDFs.  
-  3. The agent then uses its **Web Search tool** to query academic portals (e.g., Google Scholar, Semantic Scholar) for recent papers, talks, or grants associated with the professor.  
-  4. The agent synthesizes the findings from both tools into a single, consolidated context block.  
-* **Input:** Professor's Name and University (extracted from supervisor\_profile.pdf or user input).  
-* **Output:** A single text block (consolidated\_supervisor\_context) containing both foundational information from the PDFs and cutting-edge information from the web.
+*   **Status:** ? **Implemented**
+*   **Type:** Agentic Call (RAG + Web Search)
+*   **Goal:** To generate a deep, context-aware profile of a potential supervisor.
+*   **Action:**
+    1.  The `03_supervisor_analysis/step3_main.py` script is executed.
+    2.  It uses its **Web Search tool** to scrape the supervisor's online profile and identify key research domains.
+    3.  It then processes the `position.pdf` in-memory, creating a temporary **Institutional Vector Store**.
+    4.  The script uses its **RAG tool** to query this institutional store with the domains found online, retrieving the most relevant context.
+    5.  An LLM synthesizes the findings from both the web and the document into a comprehensive analysis.
+*   **Input:** Professor's Name, University, Publication URL, and the path to `position.pdf`.
+*   **Output:** A detailed text file (`step3_detailed_...`) containing the synthesized analysis.
 
-### **Step 4: Professional Summary Generation**
+### **Step 4: Professional Summary Generation (Future)**
 
-* **Type:** LLM Prompt  
-* **Goal:** To distill the raw data from the previous step into a structured, verifiable summary.  
-* **Action:** The system feeds the consolidated\_supervisor\_context into the "Supervisor Analysis & Professional Summary" prompt (from the Prompt Pipeline document). The LLM executes the instructions to identify themes and list achievements with citations.  
-* **Input:** consolidated\_supervisor\_context.  
-* **Output:** A structured text block containing the "Key Research Themes," "Cutting-Edge Achievements," and "Objective Summary" (supervisor\_summary\_output).
+*   **Status:** ?? Future Work
+*   **Type:** LLM Prompt
+*   **Goal:** To distill the raw analysis from Step 3 into a structured, professional summary.
+*   **Input:** The output text from Step 3.
+*   **Output:** A structured summary of the supervisor's research.
 
-### **Step 5: Cover Letter Generation**
+### **Step 5: Cover Letter Generation (Future)**
 
-* **Type:** LLM Prompt with RAG  
-* **Goal:** To draft the complete, personalized cover letter.  
-* **Action:**  
-  1. The system performs one final RAG query on the Vector Database to retrieve specific context about the university and program philosophy (using a query like "university research mission" or "doctoral program structure").  
-  2. The system assembles the final, comprehensive prompt using the "Cover Letter Generation" template.  
-* **Input:**  
-  1. candidate\_profile\_string (from Step 2).  
-  2. supervisor\_summary\_output (from Step 4).  
-  3. Retrieved context about the program and university (from the RAG query in this step).  
-* **Output:** The first full draft of the cover letter (cover\_letter\_draft\_v1).
-
-### **Step 6: Iterative Refinement**
-
-* **Type:** LLM Prompt  
-* **Goal:** To allow the user to fine-tune the generated draft.  
-* **Action:**  
-  1. The cover\_letter\_draft\_v1 is presented to the user.  
-  2. The user provides feedback in natural language (e.g., "Make the second paragraph more concise").  
-  3. The system uses the "Supplemental Prompt for Iterative Refinement" template, feeding it both the original draft and the user's feedback.  
-  4. This process can be repeated until the user is satisfied.  
-* **Input:** The current cover letter draft and a user feedback string.  
-* **Output:** A revised cover letter draft (cover\_letter\_draft\_v2, v3, etc.).
+*   **Status:** ?? Future Work
+*   **Type:** LLM Prompt with RAG
+*   **Goal:** To draft the complete, personalized cover letter.
+*   **Action:** This step will load the **saved candidate vector store** (from Step 2) to perform RAG queries about the candidate's skills and experience, ensuring the cover letter is perfectly tailored.
+*   **Input:**
+    1.  The candidate vector store.
+    2.  The supervisor summary from Step 4.
+*   **Output:** The first full draft of the cover letter.
