@@ -37,6 +37,15 @@ PhD-Cover-Letter-Generator/
 │   ├── step3_web_searcher.py     # Web scraping logic
 │   ├── step3_document_processor.py # PDF processing & RAG
 │   └── step3_prompts.py          # Prompt management
+├── 04_professional_summary/     # Step 4: Professional Summary Generation
+│   ├── step4_main.py             # Main entry point for Step 4
+│   ├── step4_summary_generator.py # Logic for generating the summary
+│   └── step4_prompts.py          # Prompt management for summary
+├── 05_cover_letter_generation/   # Step 5: Final Cover Letter Generation
+│   ├── step5_main.py             # Main entry point for Step 5
+│   ├── step5_letter_generator.py # Logic for RAG and LLM synthesis
+│   ├── step5_rag_retriever.py    # Logic for querying the candidate vector store
+│   └── step5_prompts.py          # Prompts for the cover letter
 ├── diagrams/                     # 📈 Visual Workflows & Architecture
 │   └── step3_data_flow.mmd       # Detailed data flow for Step 3
 ├── vector_stores/                # 💾 Saved FAISS vector stores
@@ -44,6 +53,10 @@ PhD-Cover-Letter-Generator/
 ├── data/                         # 📄 User-provided input documents
 │   ├── candidate/
 │   └── institutional/
+├── outputs/                      # 📂 Generated outputs from the pipeline
+│   ├── step3/
+│   ├── step4/
+│   └── step5/
 └── requirements.txt              # 📦 Project dependencies
 ```
 
@@ -86,8 +99,10 @@ All project diagrams are stored in the `diagrams/` folder. They are written in M
 
 - ✅ **Step 2**: Candidate Resume Analysis (Complete)
 - ✅ **Step 3**: Supervisor Research Analysis (Complete)
-- ➡️ **Next**: Step 4 (Professional Summary), Step 5 (Cover Letter Generation)
+- ✅ **Step 4**: Professional Summary Generation (Complete)
+- ✅ **Step 5**: Cover Letter Generation (Complete)
+- ✨ **Pipeline Complete!**
 
 ## ✨ **Current Status**
 
-The foundational multi-step pipeline is complete and operational. The system can successfully process a candidate's resume and perform a detailed, RAG-powered analysis on a potential supervisor. The architecture is now modular and scalable, providing a clear blueprint for future steps.
+The foundational multi-step pipeline is complete and operational. The system can successfully process a candidate's resume, perform a detailed, RAG-powered analysis on a potential supervisor, distill that analysis into a structured summary, and finally, generate a personalized cover letter. The architecture is modular and scalable, providing a clear blueprint for future enhancements.
