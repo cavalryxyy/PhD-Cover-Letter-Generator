@@ -22,7 +22,7 @@ The workflow is a multi-stage pipeline that combines data processing, retrieval-
 [Step 4: Professional Summary Generation] --> (Creates & Saves Structured JSON Summary)
      |
      V
-[Step 5: Cover Letter Generation] --> (Future - Uses Candidate & Supervisor Summaries)
+[Step 5: Cover Letter Generation] --> (Uses Candidate & Supervisor Data to Generate Letter)
      |
      V
 [Final Output: Cover Letter]
@@ -83,13 +83,20 @@ The workflow is a multi-stage pipeline that combines data processing, retrieval-
 *   **Input:** The output text file path from Step 3.
 *   **Output:** A structured JSON file (`summary_... .json`) ready for Step 5.
 
-### **Step 5: Cover Letter Generation (Future)**
+### **Step 5: Cover Letter Generation**
 
-*   **Status:** ?? Future Work
-*   **Type:** LLM Prompt with RAG
-*   **Goal:** To draft the complete, personalized cover letter.
-*   **Action:** This step will load the **saved candidate vector store** (from Step 2) and the **structured supervisor summary** (from Step 4) to perform RAG queries and generate a highly personalized and targeted cover letter.
+*   **Status:** ? **Implemented**
+*   **Type:** LLM Synthesis with RAG
+*   **Goal:** To draft the complete, personalized cover letter by synthesizing all prior analysis.
+*   **Action:**
+    1.  The `05_cover_letter_generation/step5_main.py` script is executed.
+    2.  It takes the structured JSON summary from Step 4 as input.
+    3.  It initializes a `CandidateRetriever` to load the FAISS vector store created in Step 2.
+    4.  It extracts key skills and requirements from the JSON summary and uses them to query the vector store, retrieving relevant evidence from the candidate's resume.
+    5.  It constructs a final, comprehensive prompt containing the supervisor summary and the retrieved candidate evidence.
+    6.  An LLM call generates the final cover letter text.
+    7.  The script saves the letter to a `.txt` file in the `outputs/step5/` directory.
 *   **Input:**
-    1.  The candidate vector store.
-    2.  The structured supervisor summary from Step 4.
-*   **Output:** The first full draft of the cover letter.
+    1.  The structured supervisor summary path from Step 4.
+    2.  The candidate vector store from Step 2 (loaded automatically).
+*   **Output:** The final cover letter as a text file.
