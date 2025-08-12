@@ -10,21 +10,24 @@ sys.path.insert(0, project_root)
 from src.AzureConnection import client
 from step5_rag_retriever import CandidateRetriever
 from step5_prompts import SYSTEM_PROMPT, COVER_LETTER_PROMPT
+from src.token_tracker import TokenUsageTracker
 
 class CoverLetterGenerator:
     """
     Orchestrates the generation of the cover letter by combining RAG and LLM synthesis.
     """
-    def __init__(self, candidate_retriever: CandidateRetriever, llm_client):
+    def __init__(self, candidate_retriever: CandidateRetriever, llm_client, token_tracker: TokenUsageTracker):
         """
         Initializes the generator.
 
         Args:
             candidate_retriever (CandidateRetriever): An instance of the retriever for the candidate's vector store.
             llm_client: The client for interacting with the LLM.
+            token_tracker: An instance of TokenUsageTracker.
         """
         self.retriever = candidate_retriever
         self.llm = llm_client
+        self.token_tracker = token_tracker
 
     def generate(self, summary_data: Dict) -> str:
         """
@@ -72,6 +75,11 @@ class CoverLetterGenerator:
                 temperature=0.7, # Higher temperature for more creative writing
                 max_tokens=2000
             )
+            
+            # Track token usage
+            if response.usage:
+                self.token_tracker.add_completion_usage(response.usage)
+
             cover_letter = response.choices[0].message.content.strip()
             print("Successfully generated cover letter.")
             return cover_letter

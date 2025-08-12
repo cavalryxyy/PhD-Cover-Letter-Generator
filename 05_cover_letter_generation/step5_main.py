@@ -15,6 +15,7 @@ sys.path.insert(0, module_dir)
 from src.AzureConnection import client, embeddings
 from step5_rag_retriever import CandidateRetriever
 from step5_letter_generator import CoverLetterGenerator
+from src.token_tracker import TokenUsageTracker
 
 def main():
     """
@@ -40,13 +41,15 @@ def main():
 
     # --- 2. Initialize Components ---
     try:
+        token_tracker = TokenUsageTracker()
         candidate_retriever = CandidateRetriever(
             vector_store_path=vector_store_path,
             embeddings_client=embeddings
         )
         letter_generator = CoverLetterGenerator(
             candidate_retriever=candidate_retriever,
-            llm_client=client
+            llm_client=client,
+            token_tracker=token_tracker
         )
     except Exception as e:
         print(f"Error initializing components: {e}")
@@ -66,6 +69,7 @@ def main():
             f.write(cover_letter_text)
 
         print(f"\nSuccessfully saved cover letter to: '{output_path}'")
+        token_tracker.display_usage()
     else:
         print("\nCould not generate the cover letter due to an error.")
 
