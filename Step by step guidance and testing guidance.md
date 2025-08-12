@@ -69,13 +69,19 @@ The workflow is a multi-stage pipeline that combines data processing, retrieval-
 *   **Input:** Professor's Name, University, Publication URL, and the path to `position.pdf`.
 *   **Output:** A detailed text file (`step3_detailed_...`) containing the synthesized analysis.
 
-### **Step 4: Professional Summary Generation (Future)**
+### **Step 4: Professional Summary Generation**
 
-*   **Status:** ?? Future Work
-*   **Type:** LLM Prompt
-*   **Goal:** To distill the raw analysis from Step 3 into a structured, professional summary.
-*   **Input:** The output text from Step 3.
-*   **Output:** A structured summary of the supervisor's research.
+*   **Status:** ? **Implemented**
+*   **Type:** LLM Distillation
+*   **Goal:** To distill the raw analysis from Step 3 into a structured, actionable JSON summary.
+*   **Action:**
+    1.  The `04_professional_summary/step4_main.py` script is executed.
+    2.  It takes the text output file from Step 3 as input.
+    3.  It uses a specifically crafted prompt to ask an LLM to extract key details and structure them.
+    4.  The LLM returns a JSON object containing the supervisor's profile, position details, and key alignment points.
+    5.  The script saves this JSON to the `outputs/step4/` directory.
+*   **Input:** The output text file path from Step 3.
+*   **Output:** A structured JSON file (`summary_... .json`) ready for Step 5.
 
 ### **Step 5: Cover Letter Generation**
 
