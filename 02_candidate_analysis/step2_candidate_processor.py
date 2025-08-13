@@ -5,6 +5,7 @@ import os
 import fitz  # PyMuPDF
 import logging
 import tiktoken
+from datetime import datetime
 from langchain.text_splitter import RecursiveCharacterTextSplitter
 from langchain_community.vectorstores import FAISS
 
@@ -20,7 +21,9 @@ class CandidateProcessor:
         self.embedding_client = embedding_client
         self.text_splitter = RecursiveCharacterTextSplitter(chunk_size=1000, chunk_overlap=100)
         self.encoding = tiktoken.get_encoding("cl100k_base")
-        self.vector_store_path = "vector_stores"
+        # Get project root for consistent output path management
+        self.project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
+        self.vector_store_path = os.path.join(self.project_root, "outputs", "step2")
 
     def _count_tokens(self, text: str) -> int:
         """Counts the number of tokens in a string."""
@@ -54,11 +57,26 @@ class CandidateProcessor:
             for chunk in chunks:
                 token_tracker.add_embedding_tokens(self._count_tokens(chunk))
 
-            # Create and save the vector store
+            # Create and save the vector store with timestamped naming
             vector_store = FAISS.from_texts(texts=chunks, embedding=self.embedding_client)
-            save_path = os.path.join(self.vector_store_path, "candidate_vector_store.faiss")
+            
+            # Create timestamped filename for better organization
+            timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+            # Extract candidate name from resume path if possible
+            resume_basename = os.path.splitext(os.path.basename(resume_path))[0]
+            candidate_name = resume_basename.replace(" ", "_") if resume_basename else "candidate"
+            vector_store_filename = f"candidate_vector_store_{candidate_name}_{timestamp}.faiss"
+            
+            save_path = os.path.join(self.vector_store_path, vector_store_filename)
+            
+            # Ensure output directory exists
+            os.makedirs(self.vector_store_path, exist_ok=True)
+            
             vector_store.save_local(save_path)
             logger.info(f"Candidate vector store saved successfully to: {save_path}")
+            
+            # Return the save path for use by other steps
+            return save_path
 
         except Exception as e:
             logger.error(f"Failed to process and save candidate resume: {e}")
