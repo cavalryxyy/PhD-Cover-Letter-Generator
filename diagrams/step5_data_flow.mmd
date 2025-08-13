@@ -1,0 +1,96 @@
+graph TD
+    %% ========================
+    %% Color Scheme for Clarity
+    %% ========================
+    classDef userInput fill:#89CFF0,stroke:#1E90FF,color:#333,stroke-width:2px
+    classDef script fill:#B19CD9,stroke:#9370DB,color:#333,stroke-width:2px
+    classDef process fill:#98FB98,stroke:#3CB371,color:#333,stroke-width:2px
+    classDef data fill:#FFA07A,stroke:#FF7F50,color:#333,stroke-width:2px
+    classDef output fill:#FFD700,stroke:#FFA500,color:#333,stroke-width:2px
+    classDef tokenTracker fill:#F0E68C,stroke:#DAA520,color:#333,stroke-width:2px
+    classDef llm fill:#DDA0DD,stroke:#BA55D3,color:#333,stroke-width:2px
+    classDef rag fill:#FFB6C1,stroke:#DC143C,color:#333,stroke-width:2px
+
+    subgraph "Input Sources"
+        A["Step 4 JSON Summary <br/> summary_[Supervisor]_[timestamp].json"]
+        B["Candidate Vector Store <br/> candidate_vector_store.faiss"]
+    end
+
+    subgraph "step5_main.py"
+        C[main] --> D{Validate input files};
+        D --> E[Load summary data];
+        E --> F[Create token_tracker];
+        F --> G[Initialize components];
+        G --> H[Generate cover letter];
+        H --> I[Save output];
+        I --> J[Display token usage];
+    end
+
+    subgraph "step5_rag_retriever.py"
+        K[CandidateRetriever]
+        G --> K;
+        K --> L[Load FAISS vector store];
+        L --> M[get_candidate_evidence];
+        M --> N[Extract queries from summary];
+        N --> O[Similarity search];
+        O --> P[Consolidate evidence];
+    end
+
+    subgraph "step5_letter_generator.py"
+        Q[CoverLetterGenerator]
+        H --> Q;
+        Q --> R[Extract key terms];
+        R --> S[Retrieve candidate evidence];
+        S --> T[Construct final prompt];
+        T --> U{LLM API Call};
+        U --> V[Track completion tokens];
+        V --> W[Return cover letter];
+    end
+    
+    subgraph "step5_prompts.py"
+        X[COVER_LETTER_PROMPT <br/> SYSTEM_PROMPT]
+        T -- "supervisor_summary + candidate_evidence" --> X;
+        X -- "Creative writing prompt" --> T;
+    end
+
+    subgraph "RAG Processing"
+        Y[Position Requirements Queries]
+        Z[Skills & Experience Queries]
+        AA[Project Summary Queries]
+        R --> Y;
+        R --> Z; 
+        R --> AA;
+        Y --> O;
+        Z --> O;
+        AA --> O;
+    end
+
+    subgraph "LLM Integration"
+        BB[Azure OpenAI DevGPT4o]
+        U -- "System + User prompt" --> BB;
+        BB -- "Cover letter text" --> U;
+    end
+
+    subgraph "src/token_tracker.py"
+        CC[TokenUsageTracker]
+        V -- "Prompt + Completion tokens" --> CC;
+        CC --> J;
+    end
+
+    subgraph "Output Directory"
+        DD["outputs/step5/ <br/> Cover_Letter_for_[Supervisor]_[timestamp].txt"]
+        I --> DD;
+    end
+
+    %% Connect RAG retrieval
+    S --> M;
+
+    %% Apply styling
+    class A,B userInput;
+    class C,D,E,F,G,H,I,J script;
+    class K,L,M,N,O,P,Q,R,S,T,U,V,W process;
+    class X data;
+    class Y,Z,AA rag;
+    class BB llm;
+    class CC tokenTracker;
+    class DD output;

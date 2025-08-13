@@ -11,6 +11,7 @@ sys.path.insert(0, project_root)
 sys.path.insert(0, module_dir)
 
 from step4_summary_generator import SummaryGenerator
+from src.token_tracker import TokenUsageTracker
 
 def main():
     """
@@ -27,7 +28,8 @@ def main():
     with open(args.analysis_file_path, 'r', encoding='utf-8') as f:
         analysis_text = f.read()
 
-    summary_generator = SummaryGenerator()
+    token_tracker = TokenUsageTracker()
+    summary_generator = SummaryGenerator(token_tracker)
     professional_summary = summary_generator.generate_summary(analysis_text)
 
     if professional_summary:
@@ -42,6 +44,8 @@ def main():
             json.dump(professional_summary, f, indent=4)
 
         print(f"Successfully saved professional summary to '{output_path}'")
+        
+    token_tracker.display_usage()
 
 if __name__ == "__main__":
     main()

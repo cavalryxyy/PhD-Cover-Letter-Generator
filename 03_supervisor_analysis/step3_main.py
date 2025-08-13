@@ -104,6 +104,13 @@ def save_results(analysis_data, professor_name, university):
     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
     professor_safe = "".join(c for c in professor_name if c.isalnum() or c in (' ', '-', '_')).replace(' ', '_')
     
+    # Get project root for consistent output path management
+    project_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+    output_dir = os.path.join(project_root, "outputs", "step3")
+    
+    # Ensure output directory exists
+    os.makedirs(output_dir, exist_ok=True)
+    
     # Extract data from analysis_data dictionary
     clean_result = analysis_data.get('clean_analysis', '')
     detailed_result = analysis_data.get('detailed_analysis', '')
@@ -113,18 +120,20 @@ def save_results(analysis_data, professor_name, university):
     
     # 1. Clean output for Step 4
     clean_filename = f"step3_clean_{professor_safe}_{timestamp}.txt"
+    clean_filepath = os.path.join(output_dir, clean_filename)
     try:
-        with open(clean_filename, 'w', encoding='utf-8') as f:
+        with open(clean_filepath, 'w', encoding='utf-8') as f:
             f.write(clean_result)
-        logger.info(f"Clean results saved to: {clean_filename}")
-        saved_files.append(clean_filename)
+        logger.info(f"Clean results saved to: {clean_filepath}")
+        saved_files.append(clean_filepath)
     except Exception as e:
         logger.error(f"Failed to save clean results: {e}")
     
     # 2. Detailed output for manual review
     detailed_filename = f"step3_detailed_{professor_safe}_{timestamp}.txt"
+    detailed_filepath = os.path.join(output_dir, detailed_filename)
     try:
-        with open(detailed_filename, 'w', encoding='utf-8') as f:
+        with open(detailed_filepath, 'w', encoding='utf-8') as f:
             f.write("STEP 3 SUPERVISOR ANALYSIS - DETAILED REVIEW\n")
             f.write("=" * 80 + "\n")
             f.write(f"Professor: {professor_name}\n")
@@ -149,8 +158,8 @@ def save_results(analysis_data, professor_name, university):
                 for key, value in metadata.items():
                     f.write(f"{key.replace('_', ' ').title()}: {value}\n")
         
-        logger.info(f"Detailed results saved to: {detailed_filename}")
-        saved_files.append(detailed_filename)
+        logger.info(f"Detailed results saved to: {detailed_filepath}")
+        saved_files.append(detailed_filepath)
     except Exception as e:
         logger.error(f"Failed to save detailed results: {e}")
     

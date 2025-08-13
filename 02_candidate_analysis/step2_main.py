@@ -47,12 +47,15 @@ def main():
     
     token_tracker = TokenUsageTracker()
     processor = CandidateProcessor(embedding_client=embeddings)
-    processor.process_and_save(resume_path, token_tracker)
+    vector_store_path = processor.process_and_save(resume_path, token_tracker)
 
     print("\n" + "=" * 50)
     print("CANDIDATE ANALYSIS COMPLETE")
     print("=" * 50)
-    print("Vector store for the candidate has been created and saved.")
+    if vector_store_path:
+        print(f"Vector store saved to: {vector_store_path}")
+    else:
+        print("Vector store creation completed.")
     
     token_tracker.display_usage()
     
