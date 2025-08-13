@@ -1,47 +1,84 @@
 graph TD
-    subgraph User Input
+    %% ========================
+    %% Color Scheme for Clarity
+    %% ========================
+    classDef userInput fill:#89CFF0,stroke:#1E90FF,color:#333,stroke-width:2px
+    classDef script fill:#B19CD9,stroke:#9370DB,color:#333,stroke-width:2px
+    classDef process fill:#98FB98,stroke:#3CB371,color:#333,stroke-width:2px
+    classDef data fill:#FFA07A,stroke:#FF7F50,color:#333,stroke-width:2px
+    classDef output fill:#FFD700,stroke:#FFA500,color:#333,stroke-width:2px
+    classDef tokenTracker fill:#F0E68C,stroke:#DAA520,color:#333,stroke-width:2px
+    classDef llm fill:#DDA0DD,stroke:#BA55D3,color:#333,stroke-width:2px
+
+    subgraph "User Input"
         A["CLI Arguments <br/>(Professor, University, URL, Position Path)"]
     end
 
     subgraph "step3_main.py"
         B[main] --> C{validate_inputs};
         C --> D{setup_components};
-        D --> E[execute_analysis];
-        E --> F[process_and_load];
-        E --> G[analyze];
-        G --> H[save_results];
+        D --> E[Create token_tracker];
+        E --> F[execute_analysis];
+        F --> G[process_and_load];
+        F --> H[analyze];
+        H --> I[save_results];
+        I --> J[Display token usage];
     end
 
     subgraph "step3_document_processor.py"
-        I[DocumentProcessor]
-        F -- "position.pdf" --> I;
-        I --> K((Institutional Store));
+        K[DocumentProcessor]
+        G -- "position.pdf + token_tracker" --> K;
+        K --> L[Extract & chunk PDF];
+        L --> M[Track embedding tokens];
+        M --> N((Institutional Store));
     end
 
     subgraph "step3_orchestrator.py"
-        L[SupervisorAnalyzer] -- Inherits --> BA[base_analyzer.BaseAnalyzer]
-        M[WebSearcher]
-        G --> M;
-        M -- "Research Domains" --> L;
-        L -- "Queries" --> K;
-        K -- "RAG Context" --> L;
-        L --> N{_synthesize};
+        O[SupervisorAnalyzer] -- Inherits --> BA[base_analyzer.BaseAnalyzer]
+        P[WebSearcher]
+        H --> P;
+        P -- "Research Domains" --> O;
+        O -- "RAG Queries" --> N;
+        N -- "RAG Context" --> O;
+        O --> Q{_synthesize};
     end
     
     subgraph "step3_prompts.py"
-        O[SUPERVISOR_SYNTHESIS_PROMPT]
-        N -- "Formats" --> O;
-        O -- "Formatted" --> N;
+        R[SUPERVISOR_SYNTHESIS_PROMPT]
+        Q -- "Format with context" --> R;
+        R -- "Structured prompt" --> Q;
     end
 
-    subgraph "LLM Call"
-      P[Azure OpenAI]
-      N --> BA;
-      BA -- "API Request" --> P
-      P -- "Response" --> BA
+    subgraph "base_analyzer.py"
+        BA --> S[_execute_llm_call];
+        S --> T[Track completion tokens];
     end
 
-    subgraph "Output"
-      Q[Detailed Analysis File]
-      H --> Q
+    subgraph "LLM Integration"
+        U[Azure OpenAI DevGPT4o]
+        S -- "API Request" --> U
+        U -- "Response" --> S
     end
+
+    subgraph "src/token_tracker.py"
+        V[TokenUsageTracker]
+        M -- "Embedding tokens" --> V;
+        T -- "LLM tokens" --> V;
+        V --> J;
+    end
+
+    subgraph "Output Directory"
+        W[Clean Analysis File <br/> step3_clean_[Professor]_[timestamp].txt]
+        X[Detailed Analysis File <br/> step3_detailed_[Professor]_[timestamp].txt]
+        I --> W;
+        I --> X;
+    end
+
+    %% Apply styling
+    class A userInput;
+    class B,C,D,E,F,G,H,I,J script;
+    class K,L,M,N,O,P,Q,S,T process;
+    class R data;
+    class BA,U llm;
+    class V tokenTracker;
+    class W,X output;

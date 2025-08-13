@@ -1,28 +1,55 @@
 graph TD
-    subgraph User Input
+    %% ========================
+    %% Color Scheme for Clarity
+    %% ========================
+    classDef userInput fill:#89CFF0,stroke:#1E90FF,color:#333,stroke-width:2px
+    classDef script fill:#B19CD9,stroke:#9370DB,color:#333,stroke-width:2px
+    classDef process fill:#98FB98,stroke:#3CB371,color:#333,stroke-width:2px
+    classDef data fill:#FFA07A,stroke:#FF7F50,color:#333,stroke-width:2px
+    classDef output fill:#FFD700,stroke:#FFA500,color:#333,stroke-width:2px
+    classDef tokenTracker fill:#F0E68C,stroke:#DAA520,color:#333,stroke-width:2px
+
+    subgraph "User Input"
         A["CLI Argument <br/>(Path to resume.pdf)"]
     end
 
     subgraph "step2_main.py"
         B[main] --> C{setup_components};
-        C -- "embeddings client" --> B;
-        B --> D[processor.process_and_save];
+        C -- "embeddings, TokenUsageTracker" --> B;
+        B --> D[Create token_tracker];
+        D --> E[processor.process_and_save];
+        E --> F[Display token usage];
     end
 
     subgraph "step2_candidate_processor.py"
-        E[CandidateProcessor]
-        D -- "resume.pdf" --> E;
-        E -- "Text Chunks" --> F((FAISS Vector Store));
+        G[CandidateProcessor]
+        E -- "resume.pdf + token_tracker" --> G;
+        G --> H[Extract & chunk text];
+        H --> I[Count embedding tokens];
+        I --> J((FAISS Vector Store));
+        J --> K[Save timestamped file];
     end
     
     subgraph "src/AzureConnection.py"
-        G[embeddings]
-        F -- "Uses" --> G
+        L[Azure embeddings]
+        J -- "Uses for vectorization" --> L
     end
 
-    subgraph "Output"
-      H["vector_stores/ <br/> candidate_vector_store.faiss"]
-      F -- "Saves to Disk" --> H
+    subgraph "src/token_tracker.py"
+        M[TokenUsageTracker]
+        I -- "Track embedding tokens" --> M;
+        M --> F;
     end
 
-    style H fill:#cde4f9,stroke:#99b9e8,stroke-width:2px
+    subgraph "Output Directory"
+        N["outputs/step2/ <br/> candidate_vector_store_[name]_[timestamp].faiss"]
+        K -- "Saves to disk" --> N
+    end
+
+    %% Apply styling
+    class A userInput;
+    class B,C,D,E,F script;
+    class G,H,I,J,K process;
+    class L data;
+    class M tokenTracker;
+    class N output;

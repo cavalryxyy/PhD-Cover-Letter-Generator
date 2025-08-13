@@ -42,7 +42,7 @@
 </head>
 <body>
     <div class="container">
-        <h1>PhD Cover Letter Generator - Pipeline Visualization</h1>
+        <h1>PhD Cover Letter Generator - Complete Pipeline Visualization</h1>
         
         <div class="flowchart">
             <h2>Step 2: Candidate Resume Processing</h2>
@@ -56,44 +56,52 @@ graph TD
     classDef process fill:#98FB98,stroke:#3CB371,color:#333,stroke-width:2px
     classDef data fill:#FFA07A,stroke:#FF7F50,color:#333,stroke-width:2px
     classDef output fill:#FFD700,stroke:#FFA500,color:#333,stroke-width:2px
+    classDef tokenTracker fill:#F0E68C,stroke:#DAA520,color:#333,stroke-width:2px
 
-    %% ========================
-    %% Component Grouping
-    %% ========================
     subgraph "User Input"
         A["CLI Argument <br/>(Path to resume.pdf)"]
     end
-    
+
     subgraph "Execution Script (step2_main.py)"
         B[main] --> C{setup_components};
-        C -- "embeddings client" --> B;
-        B --> D[processor.process_and_save];
+        C -- "embeddings, TokenUsageTracker" --> B;
+        B --> D[Create token_tracker];
+        D --> E[processor.process_and_save];
+        E --> F[Display token usage];
     end
-    
+
     subgraph "Processing Logic (step2_candidate_processor.py)"
-        E[CandidateProcessor]
-        D -- "resume.pdf" --> E;
-        E -- "Text Chunks" --> F((FAISS Vector Store));
+        G[CandidateProcessor]
+        E -- "resume.pdf + token_tracker" --> G;
+        G --> H[Extract & chunk text];
+        H --> I[Count embedding tokens];
+        I --> J((FAISS Vector Store));
+        J --> K[Save timestamped file];
     end
     
     subgraph "Data Source (src/AzureConnection.py)"
-        G[embeddings]
-        F -- "Uses" --> G
-    end
-    
-    subgraph "Persistent Output"
-        H["vector_stores/ <br/> candidate_vector_store.faiss"]
-        F -- "Saves to Disk" --> H
+        L[Azure embeddings]
+        J -- "Uses for vectorization" --> L
     end
 
-    %% ========================
-    %% Apply Color Coding
-    %% ========================
+    subgraph "Token Tracking (src/token_tracker.py)"
+        M[TokenUsageTracker]
+        I -- "Track embedding tokens" --> M;
+        M --> F;
+    end
+
+    subgraph "Persistent Output"
+        N["outputs/step2/ <br/> candidate_vector_store_[name]_[timestamp].faiss"]
+        K -- "Saves to disk" --> N
+    end
+
+    %% Apply styling
     class A userInput;
-    class B,C,D script;
-    class E,F process;
-    class G data;
-    class H output;
+    class B,C,D,E,F script;
+    class G,H,I,J,K process;
+    class L data;
+    class M tokenTracker;
+    class N output;
             </div>
         </div>
 
@@ -109,67 +117,289 @@ graph TD
     classDef process fill:#98FB98,stroke:#3CB371,color:#333,stroke-width:2px
     classDef data fill:#FFA07A,stroke:#FF7F50,color:#333,stroke-width:2px
     classDef output fill:#FFD700,stroke:#FFA500,color:#333,stroke-width:2px
+    classDef tokenTracker fill:#F0E68C,stroke:#DAA520,color:#333,stroke-width:2px
     classDef llm fill:#DDA0DD,stroke:#BA55D3,color:#333,stroke-width:2px
 
-    %% ========================
-    %% Component Grouping
-    %% ========================
     subgraph "User Input"
-        A["CLI Arguments <br/>(Professor, University, URL, Position Path)"]
+        A["CLI Arguments <br/>Professor University URL Position Path"]
     end
 
-    subgraph "Execution Script (step3_main.py)"
+    subgraph "Execution Script"
         B[main] --> C{validate_inputs};
         C --> D{setup_components};
-        D --> E[execute_analysis];
-        E --> F[process_and_load];
-        E --> G[analyze];
-        G --> H[save_results];
+        D --> E[Create token_tracker];
+        E --> F[execute_analysis];
+        F --> G[process_and_load];
+        F --> H[analyze];
+        H --> I[save_results];
+        I --> J[Display token usage];
     end
 
-    subgraph "Data Processing (step3_document_processor.py)"
-        I[DocumentProcessor]
-        F -- "position.pdf" --> I;
-        I --> K((Institutional Store));
+    subgraph "Data Processing"
+        K[DocumentProcessor]
+        G -- "position PDF + token tracker" --> K;
+        K --> L[Extract & chunk PDF];
+        L --> M[Track embedding tokens];
+        M --> N((Institutional Store));
     end
 
-    subgraph "Orchestration & Logic (step3_orchestrator.py)"
-        L[SupervisorAnalyzer] -- Inherits --> BA[base_analyzer.BaseAnalyzer]
-        M[WebSearcher]
-        G --> M;
-        M -- "Research Domains" --> L;
-        L -- "Queries" --> K;
-        K -- "RAG Context" --> L;
-        L --> N{_synthesize};
+    subgraph "Orchestration and Logic"
+        O[SupervisorAnalyzer]
+        P[WebSearcher]
+        H --> P;
+        P -- "Research Domains" --> O;
+        O -- "RAG Queries" --> N;
+        N -- "RAG Context" --> O;
+        O --> Q{synthesize};
     end
     
-    subgraph "Prompt Engineering (step3_prompts.py)"
-        O[SUPERVISOR_SYNTHESIS_PROMPT]
-        N -- "Formats" --> O;
-        O -- "Formatted" --> N;
+    subgraph "Prompt Engineering"
+        R[SUPERVISOR_SYNTHESIS_PROMPT]
+        Q -- "Format with context" --> R;
+        R -- "Structured prompt" --> Q;
     end
 
-    subgraph "Language Model Call"
-      P[Azure OpenAI]
-      N --> BA;
-      BA -- "API Request" --> P
-      P -- "Response" --> BA
+    subgraph "LLM Integration"
+        BA[BaseAnalyzer LLM Call]
+        S[Azure OpenAI DevGPT4o]
+        Q --> BA;
+        BA -- "API Request" --> S;
+        S -- "Response" --> BA;
+        BA --> T[Track completion tokens];
+    end
+
+    subgraph "Token Tracking"
+        U[TokenUsageTracker]
+        M -- "Embedding tokens" --> U;
+        T -- "LLM tokens" --> U;
+        U --> J;
     end
 
     subgraph "Persistent Output"
-      Q[Detailed Analysis File]
-      H --> Q
+        V["Clean Analysis File <br/> step3_clean_Professor_timestamp.txt"]
+        W["Detailed Analysis File <br/> step3_detailed_Professor_timestamp.txt"]
+        I --> V;
+        I --> W;
     end
     
-    %% ========================
-    %% Apply Color Coding
-    %% ========================
+    %% Apply styling
     class A userInput;
-    class B,C,D,E,F,G,H script;
-    class I,K,M process;
-    class L,N,O,BA process;
-    class P llm;
-    class Q output;
+    class B,C,D,E,F,G,H,I,J script;
+    class K,L,M,N,O,P,Q,T process;
+    class R data;
+    class BA,S llm;
+    class U tokenTracker;
+    class V,W output;
+            </div>
+        </div>
+
+        <div class="flowchart">
+            <h2>Step 4: Professional Summary Generation</h2>
+            <div class="mermaid">
+graph TD
+    %% ========================
+    %% Color Scheme
+    %% ========================
+    classDef userInput fill:#89CFF0,stroke:#1E90FF,color:#333,stroke-width:2px
+    classDef script fill:#B19CD9,stroke:#9370DB,color:#333,stroke-width:2px
+    classDef process fill:#98FB98,stroke:#3CB371,color:#333,stroke-width:2px
+    classDef data fill:#FFA07A,stroke:#FF7F50,color:#333,stroke-width:2px
+    classDef output fill:#FFD700,stroke:#FFA500,color:#333,stroke-width:2px
+    classDef tokenTracker fill:#F0E68C,stroke:#DAA520,color:#333,stroke-width:2px
+    classDef llm fill:#DDA0DD,stroke:#BA55D3,color:#333,stroke-width:2px
+    classDef json fill:#87CEEB,stroke:#4682B4,color:#333,stroke-width:2px
+
+    subgraph "Input Source"
+        A["Step 3 Clean Analysis <br/> step3_clean_[Professor]_[timestamp].txt"]
+    end
+
+    subgraph "Execution Script (step4_main.py)"
+        B[main] --> C{Validate analysis file};
+        C --> D[Load analysis text];
+        D --> E[Create token_tracker];
+        E --> F[Initialize SummaryGenerator];
+        F --> G[generate_summary];
+        G --> H[Save JSON output];
+        H --> I[Display token usage];
+    end
+
+    subgraph "Processing Logic (step4_summary_generator.py)"
+        J[SummaryGenerator]
+        G --> J;
+        J --> K[Format user prompt];
+        K --> L{LLM API Call};
+        L --> M[Track completion tokens];
+        M --> N[Parse response];
+        N --> O{Validate JSON};
+        O -- Success --> P[Return structured data];
+        O -- Error --> Q[Handle malformed JSON];
+        Q --> P;
+    end
+    
+    subgraph "Prompt Engineering (step4_prompts.py)"
+        R[PROFESSIONAL_SUMMARY_PROMPT <br/> SYSTEM_PROMPT]
+        K -- "analysis_text" --> R;
+        R -- "Formatted prompt" --> K;
+    end
+
+    subgraph "Language Model Call"
+        S[Azure OpenAI DevGPT4o]
+        L -- "System + User prompt" --> S;
+        S -- "JSON response" --> L;
+    end
+
+    subgraph "Token Tracking (src/token_tracker.py)"
+        T[TokenUsageTracker]
+        M -- "Prompt + Completion tokens" --> T;
+        T --> I;
+    end
+
+    subgraph "JSON Structure Validation"
+        U[supervisor_profile]
+        V[position_details]  
+        W[alignment_summary]
+        P --> U;
+        P --> V;
+        P --> W;
+    end
+
+    subgraph "Persistent Output"
+        X["outputs/step4/ <br/> summary_[Supervisor_Name]_[timestamp].json"]
+        H --> X;
+    end
+
+    %% Apply styling
+    class A userInput;
+    class B,C,D,E,F,G,H,I script;
+    class J,K,L,M,N,O,P,Q process;
+    class R data;
+    class S llm;
+    class T tokenTracker;
+    class U,V,W json;
+    class X output;
+            </div>
+        </div>
+
+        <div class="flowchart">
+            <h2>Step 5: Cover Letter Generation</h2>
+            <div class="mermaid">
+graph TD
+    %% ========================
+    %% Color Scheme
+    %% ========================
+    classDef userInput fill:#89CFF0,stroke:#1E90FF,color:#333,stroke-width:2px
+    classDef script fill:#B19CD9,stroke:#9370DB,color:#333,stroke-width:2px
+    classDef process fill:#98FB98,stroke:#3CB371,color:#333,stroke-width:2px
+    classDef data fill:#FFA07A,stroke:#FF7F50,color:#333,stroke-width:2px
+    classDef output fill:#FFD700,stroke:#FFA500,color:#333,stroke-width:2px
+    classDef tokenTracker fill:#F0E68C,stroke:#DAA520,color:#333,stroke-width:2px
+    classDef llm fill:#DDA0DD,stroke:#BA55D3,color:#333,stroke-width:2px
+    classDef rag fill:#FFB6C1,stroke:#DC143C,color:#333,stroke-width:2px
+
+    subgraph "Input Sources"
+        A["Step 4 JSON Summary <br/> summary_[Supervisor]_[timestamp].json"]
+        B["Candidate Vector Store <br/> candidate_vector_store.faiss"]
+    end
+
+    subgraph "Execution Script (step5_main.py)"
+        C[main] --> D{Validate input files};
+        D --> E[Load summary data];
+        E --> F[Create token_tracker];
+        F --> G[Initialize components];
+        G --> H[Generate cover letter];
+        H --> I[Save output];
+        I --> J[Display token usage];
+    end
+
+    subgraph "RAG Processing (step5_rag_retriever.py)"
+        K[CandidateRetriever]
+        G --> K;
+        K --> L[Load FAISS vector store];
+        L --> M[get_candidate_evidence];
+        M --> N[Extract queries from summary];
+        N --> O[Similarity search];
+        O --> P[Consolidate evidence];
+    end
+
+    subgraph "Letter Generation (step5_letter_generator.py)"
+        Q[CoverLetterGenerator]
+        H --> Q;
+        Q --> R[Extract key terms];
+        R --> S[Retrieve candidate evidence];
+        S --> T[Construct final prompt];
+        T --> U{LLM API Call};
+        U --> V[Track completion tokens];
+        V --> W[Return cover letter];
+    end
+    
+    subgraph "Prompt Engineering (step5_prompts.py)"
+        X[COVER_LETTER_PROMPT <br/> SYSTEM_PROMPT]
+        T -- "supervisor_summary + candidate_evidence" --> X;
+        X -- "Creative writing prompt" --> T;
+    end
+
+    subgraph "Language Model Call"
+        Y[Azure OpenAI DevGPT4o]
+        U -- "System + User prompt" --> Y;
+        Y -- "Cover letter text" --> U;
+    end
+
+    subgraph "Token Tracking (src/token_tracker.py)"
+        Z[TokenUsageTracker]
+        V -- "Prompt + Completion tokens" --> Z;
+        Z --> J;
+    end
+
+    subgraph "Persistent Output"
+        AA["outputs/step5/ <br/> Cover_Letter_for_[Supervisor]_[timestamp].txt"]
+        I --> AA;
+    end
+
+    %% Connect RAG retrieval
+    S --> M;
+
+    %% Apply styling
+    class A,B userInput;
+    class C,D,E,F,G,H,I,J script;
+    class K,L,M,N,O,P,Q,R,S,T,U,V,W process;
+    class X data;
+    class Y llm;
+    class Z tokenTracker;
+    class AA output;
+            </div>
+        </div>
+
+        <div class="flowchart">
+            <h2>Complete Pipeline Overview</h2>
+            <div class="mermaid">
+graph LR
+    %% ========================
+    %% Pipeline Flow
+    %% ========================
+    classDef step fill:#B19CD9,stroke:#9370DB,color:#333,stroke-width:3px
+    classDef data fill:#89CFF0,stroke:#1E90FF,color:#333,stroke-width:2px
+    classDef tokens fill:#F0E68C,stroke:#DAA520,color:#333,stroke-width:2px
+
+    A[Resume PDF] --> B[Step 2: Candidate Analysis]
+    C[Position PDF] --> D[Step 3: Supervisor Analysis]
+    B --> E[Vector Store]
+    D --> F[Clean Analysis]
+    F --> G[Step 4: Professional Summary]
+    G --> H[JSON Summary]
+    H --> I[Step 5: Cover Letter Generation]
+    E --> I
+    I --> J[Cover Letter]
+
+    %% Token tracking across all steps
+    K[Token Tracker] -.-> B
+    K -.-> D  
+    K -.-> G
+    K -.-> I
+
+    %% Apply styling
+    class B,D,G,I step;
+    class A,C,E,F,H,J data;
+    class K tokens;
             </div>
         </div>
     </div>

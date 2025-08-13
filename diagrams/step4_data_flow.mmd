@@ -1,0 +1,81 @@
+graph TD
+    %% ========================
+    %% Color Scheme for Clarity
+    %% ========================
+    classDef userInput fill:#89CFF0,stroke:#1E90FF,color:#333,stroke-width:2px
+    classDef script fill:#B19CD9,stroke:#9370DB,color:#333,stroke-width:2px
+    classDef process fill:#98FB98,stroke:#3CB371,color:#333,stroke-width:2px
+    classDef data fill:#FFA07A,stroke:#FF7F50,color:#333,stroke-width:2px
+    classDef output fill:#FFD700,stroke:#FFA500,color:#333,stroke-width:2px
+    classDef tokenTracker fill:#F0E68C,stroke:#DAA520,color:#333,stroke-width:2px
+    classDef llm fill:#DDA0DD,stroke:#BA55D3,color:#333,stroke-width:2px
+    classDef json fill:#87CEEB,stroke:#4682B4,color:#333,stroke-width:2px
+
+    subgraph "Input Source"
+        A["Step 3 Clean Analysis <br/> step3_clean_[Professor]_[timestamp].txt"]
+    end
+
+    subgraph "step4_main.py"
+        B[main] --> C{Validate analysis file};
+        C --> D[Load analysis text];
+        D --> E[Create token_tracker];
+        E --> F[Initialize SummaryGenerator];
+        F --> G[generate_summary];
+        G --> H[Save JSON output];
+        H --> I[Display token usage];
+    end
+
+    subgraph "step4_summary_generator.py"
+        J[SummaryGenerator]
+        G --> J;
+        J --> K[Format user prompt];
+        K --> L{LLM API Call};
+        L --> M[Track completion tokens];
+        M --> N[Parse response];
+        N --> O{Validate JSON};
+        O -- Success --> P[Return structured data];
+        O -- Error --> Q[Handle malformed JSON];
+        Q --> P;
+    end
+    
+    subgraph "step4_prompts.py"
+        R[PROFESSIONAL_SUMMARY_PROMPT <br/> SYSTEM_PROMPT]
+        K -- "analysis_text" --> R;
+        R -- "Formatted prompt" --> K;
+    end
+
+    subgraph "LLM Integration"
+        S[Azure OpenAI DevGPT4o]
+        L -- "System + User prompt" --> S;
+        S -- "JSON response" --> L;
+    end
+
+    subgraph "src/token_tracker.py"
+        T[TokenUsageTracker]
+        M -- "Prompt + Completion tokens" --> T;
+        T --> I;
+    end
+
+    subgraph "JSON Structure Validation"
+        U[supervisor_profile]
+        V[position_details]  
+        W[alignment_summary]
+        P --> U;
+        P --> V;
+        P --> W;
+    end
+
+    subgraph "Output Directory"
+        X["outputs/step4/ <br/> summary_[Supervisor_Name]_[timestamp].json"]
+        H --> X;
+    end
+
+    %% Apply styling
+    class A userInput;
+    class B,C,D,E,F,G,H,I script;
+    class J,K,L,M,N,O,P,Q process;
+    class R data;
+    class S llm;
+    class T tokenTracker;
+    class U,V,W json;
+    class X output;
