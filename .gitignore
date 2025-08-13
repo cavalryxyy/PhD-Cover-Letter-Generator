@@ -179,4 +179,13 @@ docker-compose.yml
 *.mkv 
 
 # FAISS index files
-index.faiss 
+index.faiss
+
+# Output files with sensitive information
+outputs/step5/*Cover_Letter_for_Professor_*.txt
+outputs/step5/*_for_Professor_*.txt
+outputs/step5/Cover_Letter_*.txt
+
+# Prevent any output files with real names
+outputs/**/*Professor*.txt
+outputs/**/*professor*.txt 
